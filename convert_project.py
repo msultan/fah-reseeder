@@ -12,6 +12,7 @@ from mdtraj.utils import six
 from joblib import Parallel, delayed
 import multiprocessing
 
+##The concatenation code is directly from F@H Munge. Thanks to @kylebeauchamp.
 def keynat(string):
     '''A natural sort helper function for sort() and sorted()
     without using regular expression.
@@ -54,7 +55,7 @@ def concatenate_core17(dir,run,clone):
     if dir is None:
         dir="/nobackup/msultan/research/kinase/her_kinase/fah_data/PROJ9104"
 
-    path = dir+"/RUN%d/CLONE%d/"%(run,clone)
+    path = dir+"RUN%d/CLONE%d/"%(run,clone)
     top = md.load(dir+"/topologies/%d.pdb"%run)
     output_filename = dir+"/trajectories/%d_%d.hdf5"%(run,clone)
 
