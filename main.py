@@ -4,7 +4,7 @@ import numpy as np
 import mdtraj as mdt
 import glob
 import sys
-from msmbuilder.msm import MarkovStateModel
+
 from convert_project import *
 from featurize_project import *
 from cluster_project import *
