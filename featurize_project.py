@@ -3,8 +3,9 @@ from msmbuilder.utils import verboseload,verbosedump
 from msmbuilder.decomposition import tICA
 import glob
 import os
+import numpy as np
 import mdtraj as mdt
-def featurize_project(featurizer_object,dir):
+def featurize_project(dir,featurizer_object):
 
      if featurizer_object is None:
           featurizer = DihedralFeaturizer(types=['phi', 'psi','chi1'])
@@ -16,22 +17,27 @@ def featurize_project(featurizer_object,dir):
 
      feature_dict={}
 
-     traj_list =  glob.glob(dir+"trajectories/*.hdf5")
+     traj_list =  glob.glob(dir+"/trajectories/*.hdf5")
      for traj in traj_list:
           feature_dict[os.path.basename(traj)] = featurizer.partial_transform(mdt.load(traj))
 
-     verbosedump(feature_dict,dir+"featurized_traj.pkl")
+     verbosedump(feature_dict,dir+"/featurized_traj.pkl")
 
      return feature_dict
 
 
-def tica_wrapper(feature_dict):
-     #100ps*100==10ns
-     tica_mdl = tICA(lag_time=100)
-     tica_mdl.fit([feature_dict[i] for i in feature_dict.keys()])
+def tica_wrapper(dir,feature_dict):
+     #100ps*100==10ns and 10 features
+
+     tica_mdl = tICA(lag_time=100,n_components=10)
+     for i in feature_dict.keys():
+          try:
+               tica_mdl.partial_fit(feature_dict[i])
+          except:
+               pass
+
      tica_features={}
      for i in feature_dict.keys():
-          tica_features[i] = tica_mdl.transform(feature_dict[i])
-
-     verbosedump(tica_features,dir+"tica_features.pkl")
+          tica_features[i] = tica_mdl.transform([feature_dict[i]])
+     verbosedump(tica_features,dir+"/tica_features.pkl")
      return tica_features

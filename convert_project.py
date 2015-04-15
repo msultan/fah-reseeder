@@ -55,9 +55,9 @@ def concatenate_core17(dir,run,clone):
     if dir is None:
         dir="/nobackup/msultan/research/kinase/her_kinase/fah_data/PROJ9104"
 
-    path = dir+"RUN%d/CLONE%d/"%(run,clone)
-    top = md.load(dir+"/topologies/%d.pdb"%run)
-    output_filename = dir+"/trajectories/%d_%d.hdf5"%(run,clone)
+    path = os.path.abspath(dir)+"/RUN%d/CLONE%d/"%(run,clone)
+    top = md.load( os.path.abspath(dir)+"/topologies/%d.pdb"%run)
+    output_filename =  os.path.abspath(dir)+"/trajectories/%d_%d.hdf5"%(run,clone)
 
     print(path,top,output_filename)
     glob_input = os.path.join(path, "results-*.tar.bz2")
@@ -94,21 +94,21 @@ def concatenate_core17(dir,run,clone):
             trj_file._handle.root.processed_filenames.append([filename])
 
 def sanity_test(dir):
-    if not os.path.exists(dir+"topologies"):
+    if not os.path.isdir(os.path.join(dir+"/topologies")):
         #print("Toplogies Folder Doesnt exist")
         sys.exit("Toplogies Folder Doesnt exist.Exiting!")
 
 
-    if not os.path.exists(dir+"trajectories"):
+    if not os.path.isdir(os.path.join(dir+"/trajectories")):
         print("Trajectories Folder Doesnt exist.Creating")
-        os.makedirs(dir+"trajectories")
+        os.makedirs(os.path.join(dir+"/trajectories"))
 
 
-def convert_project_wrapper_func(dir):
+def extract_project_wrapper(dir):
     sanity_test(dir)
     num_cores = multiprocessing.cpu_count()
     runs=len(glob.glob(dir+"/RUN*"))
-    clones=len(glob.glob(dir+"RUN0/CLONE*"))
+    clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))
     print("Using %d cores to parallelize"%num_cores)
     Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
