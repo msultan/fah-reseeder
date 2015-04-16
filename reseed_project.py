@@ -124,7 +124,7 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones):
           serializeObject(dir,ind,system,'system.xml')
           serializeObject(dir,ind,integrator,'integrator.xml')
 
-          #basic sanity test that the number of atoms are the same. should add more
+          #basic sanity test that the number of atoms are the same. should add more tests
           assert(simulation.system.getNumParticles()==new_state.n_atoms==system.getNumParticles())
 
 

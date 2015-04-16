@@ -5,6 +5,12 @@ import glob
 import os
 import numpy as np
 import mdtraj as mdt
+from joblib import Parallel, delayed
+import multiprocessing
+
+def featurize_traj(featurizer,traj):
+     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj))]
+
 def featurize_project(dir,featurizer_object):
 
      if featurizer_object is None:
@@ -18,8 +24,14 @@ def featurize_project(dir,featurizer_object):
      feature_dict={}
 
      traj_list =  glob.glob(dir+"/trajectories/*.hdf5")
-     for traj in traj_list:
-          feature_dict[os.path.basename(traj)] = featurizer.partial_transform(mdt.load(traj))
+
+     num_cores = multiprocessing.cpu_count()
+     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(featurizer,traj) \
+        for traj in traj_list)
+
+
+     for result in result_list:
+          feature_dict[result[0]] = result[1]
 
      verbosedump(feature_dict,dir+"/featurized_traj.pkl")
 
