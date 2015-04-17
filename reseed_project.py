@@ -59,7 +59,7 @@ def load_setup_files(dir,traj_fname):
 
 
 
-def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones):
+def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
 
      sorted_cluster_indices = np.argsort(cluster_mdl.counts_)[:n_runs]
 
@@ -106,7 +106,9 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones):
           #basic sanity test
           assert(assignments[traj_fname][0][frame_ind]==val)
 
-          new_state = mdt.load_frame(dir+"/trajectories/%s"%traj_fname,frame_ind)
+          #since we use stride, multiple frame_ind with stride rate to get actual frame index.
+          new_state = mdt.load_frame(dir+"/trajectories/%s"%traj_fname,frame_ind*stride)
+
           #save it for later reference
           new_state.save_pdb(dir+"/new_project/topologies/%d.pdb"%ind)
           #load pdb in openmm format

@@ -16,7 +16,7 @@ def main(args):
      #extract
      extract_project_wrapper(args.d)
      #featurize
-     feature_dict = featurize_project(args.d,args.f)
+     feature_dict = featurize_project(args.d,args.f,args.s)
 
      #ticafy
      if args.i==True:
@@ -26,7 +26,7 @@ def main(args):
      cluster_mdl,assignments = cluster_project_wrapper(args.d,feature_dict,args.n)
 
      #cluster and pull frames
-     pull_new_seeds(args.d,cluster_mdl,assignments,args.r,args.c)
+     pull_new_seeds(args.d,cluster_mdl,assignments,args.r,args.c,args.s)
 
      return
 
@@ -43,8 +43,10 @@ def parse_commandline():
      parser.add_argument('-f', '--featurizer',dest='f',default=None, help='Featurizer to use.Defualts to \
           DihedralFeaturizer')
 
+     parser.add_argument('-s','--stride',dest='s',default=10,type=int,help='Stride to use when featurizing.')
      parser.add_argument('-i', '--do_tica',dest='i',default=True, help='Whether or not to do tica')
      parser.add_argument('-n','--n_states',dest='n',default=50,help='Number of States')
+
 
      parser.add_argument('-r','--runs',dest='r',default=2,help='Choose top r states to reseed from')
 

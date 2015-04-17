@@ -8,10 +8,10 @@ import mdtraj as mdt
 from joblib import Parallel, delayed
 import multiprocessing
 
-def featurize_traj(featurizer,traj):
-     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj))]
+def featurize_traj(featurizer,traj,stride):
+     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,stride=stride))]
 
-def featurize_project(dir,featurizer_object):
+def featurize_project(dir,featurizer_object,stride):
 
      if featurizer_object is None:
           featurizer = DihedralFeaturizer(types=['phi', 'psi','chi1'])
@@ -26,7 +26,7 @@ def featurize_project(dir,featurizer_object):
      traj_list =  glob.glob(dir+"/trajectories/*.hdf5")
 
      num_cores = multiprocessing.cpu_count()
-     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(featurizer,traj) \
+     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(featurizer,traj,stride) \
         for traj in traj_list)
 
 
