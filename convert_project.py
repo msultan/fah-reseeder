@@ -4,13 +4,17 @@ import os
 import glob
 import sys
 import tarfile
-from mdtraj.formats.hdf5 import HDF5TrajectoryFile
+from mdtraj import Trajectory
+from mdtraj.formats.dcd import DCDTrajectoryFile
 import mdtraj as md
 import tables
 from mdtraj.utils.contextmanagers import enter_temp_directory
 from mdtraj.utils import six
+from msmbuilder.utils import verbosedump,verboseload
 from joblib import Parallel, delayed
 import multiprocessing
+
+
 
 ##The concatenation code is directly from F@H Munge. Thanks to @kylebeauchamp.
 def keynat(string):
@@ -35,6 +39,7 @@ def keynat(string):
     return r
 
 
+
 def concatenate_core17(dir,run,clone):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
 
@@ -57,8 +62,10 @@ def concatenate_core17(dir,run,clone):
 
     path = os.path.abspath(dir)+"/RUN%d/CLONE%d/"%(run,clone)
     top = md.load( os.path.abspath(dir)+"/topologies/%d.pdb"%run)
-    output_filename =  os.path.abspath(dir)+"/trajectories/%d_%d.hdf5"%(run,clone)
+    output_filename =  os.path.abspath(dir)+"/trajectories/%d_%d.dcd"%(run,clone)
 
+    already_processed_filename =  os.path.abspath(dir)+"/trajectories/processed_trajectories/%d_%d.txt"\
+                                                                                            %(run,clone)
     print(path,top,output_filename)
     glob_input = os.path.join(path, "results-*.tar.bz2")
     filenames = glob.glob(glob_input)
@@ -67,31 +74,33 @@ def concatenate_core17(dir,run,clone):
     if len(filenames) <= 0:
         return
 
-    trj_file = HDF5TrajectoryFile(output_filename, mode='a')
+    if os.path.exists(output_filename):
+        trj_file = md.load(output_filename,top=top)
+    else:
+        trj_file = None
 
-    try:
-        trj_file._create_earray(where='/', name='processed_filenames',\
-            atom=trj_file.tables.StringAtom(1024), shape=(0,))
-        trj_file.topology = top.topology
-    except trj_file.tables.NodeError:
-        pass
+    with open(already_processed_filename, 'a') as infile:
 
-    for filename in filenames:
-        if six.b(filename) in trj_file._handle.root.processed_filenames:  \
-        # On Py3, the pytables list of filenames has type byte (e.g. b"hey"), so we need to deal with this via six.
-            print("Already processed %s" % filename)
-            continue
-        with enter_temp_directory():
-            print("Processing %s" % filename)
-            archive = tarfile.open(filename, mode='r:bz2')
-            archive.extract("positions.xtc")
-            trj = md.load("positions.xtc", top=top)
+        for filename in filenames:
+            if not os.path.basename(filename) in open(already_processed_filename).read():
+                with enter_temp_directory():
+                    archive = tarfile.open(filename, mode='r:bz2')
+                    archive.extract("positions.xtc")
+                    trj = md.load("positions.xtc", top=top)
+                    if trj_file is None:
+                        trj_file =  trj
+                    else:
+                        trj_file += trj
+                infile.writelines(os.path.basename(filename)+'\n')
+            else:
+                print("Already Processed %s"%filename)
+                continue
 
-            for frame in trj:
-                trj_file.write(coordinates=frame.xyz, \
-                    cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
+    trj_file.save_dcd(output_filename)
+    return
 
-            trj_file._handle.root.processed_filenames.append([filename])
+
+
 
 def sanity_test(dir):
     if not os.path.isdir(os.path.join(dir+"/topologies")):
@@ -100,17 +109,25 @@ def sanity_test(dir):
 
 
     if not os.path.isdir(os.path.join(dir+"/trajectories")):
-        print("Trajectories Folder Doesnt exist.Creating")
+        print("Trajectories folder doesnt exist.Creating")
         os.makedirs(os.path.join(dir+"/trajectories"))
 
+    if not os.path.exists(os.path.join(dir+"/trajectories/processed_trajectories/")):
+        print("Processed trajectories folder doesn't exist.Creating.")
+        os.makedirs(os.path.join(dir+"/trajectories/processed_trajectories/"))
+    return
 
 def extract_project_wrapper(dir):
+
     sanity_test(dir)
+
     num_cores = multiprocessing.cpu_count()
+
     runs=len(glob.glob(dir+"/RUN*"))
     clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))
     print("Using %d cores to parallelize"%num_cores)
+
     Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
         for run in range(runs) for clone in range(clones))
 

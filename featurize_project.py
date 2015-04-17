@@ -8,8 +8,9 @@ import mdtraj as mdt
 from joblib import Parallel, delayed
 import multiprocessing
 
-def featurize_traj(featurizer,traj,stride):
-     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,stride=stride))]
+def featurize_traj(dir,featurizer,traj,stride):
+     top = dir+"/topologies/%s.pdb"%os.path.basename(traj).split("_")[0]
+     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
 
 def featurize_project(dir,featurizer_object,stride):
 
@@ -23,10 +24,10 @@ def featurize_project(dir,featurizer_object,stride):
 
      feature_dict={}
 
-     traj_list =  glob.glob(dir+"/trajectories/*.hdf5")
+     traj_list =  glob.glob(dir+"/trajectories/*.dcd")
 
      num_cores = multiprocessing.cpu_count()
-     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(featurizer,traj,stride) \
+     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(dir,featurizer,traj,stride) \
         for traj in traj_list)
 
 
