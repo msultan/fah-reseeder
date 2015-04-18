@@ -106,8 +106,10 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
           #basic sanity test
           assert(assignments[traj_fname][0][frame_ind]==val)
 
+          top = dir+"/topologies/%s.pdb"%os.path.basename(traj_fname).split("_")[0]
+
           #since we use stride, multiple frame_ind with stride rate to get actual frame index.
-          new_state = mdt.load_frame(dir+"/trajectories/%s"%traj_fname,frame_ind*stride)
+          new_state = mdt.load_frame(dir+"/trajectories/%s"%traj_fname,top=top,index=frame_ind*stride)
 
           #save it for later reference
           new_state.save_pdb(dir+"/new_project/topologies/%d.pdb"%ind)
