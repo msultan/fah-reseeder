@@ -4,7 +4,6 @@ import os
 import glob
 import sys
 import tarfile
-from mdtraj import Trajectory
 from mdtraj.formats.dcd import DCDTrajectoryFile
 import mdtraj as md
 import tables
@@ -74,10 +73,9 @@ def concatenate_core17(dir,run,clone):
     if len(filenames) <= 0:
         return
 
+    trj_file = None
     if os.path.exists(output_filename):
         trj_file = md.load(output_filename,top=top)
-    else:
-        trj_file = None
 
     with open(already_processed_filename, 'a') as infile:
 
