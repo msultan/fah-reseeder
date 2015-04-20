@@ -61,9 +61,7 @@ def load_setup_files(dir,traj_fname):
 
 def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
 
-     sorted_cluster_indices = np.argsort(cluster_mdl.counts_)[:n_runs]
 
-     print sorted_cluster_indices
      try:
           os.mkdir(dir+"/new_project")
      except:
@@ -80,10 +78,21 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
 
      assignment_array = np.zeros((n_trajs,max_traj_length))-1
 
-     mapping_dict={}
+     mapping_dict = {}
+
+     state_counts_list = np.zeros(cluster_mdl.n_clusters)
+
      for i,v in enumerate(assignments.keys()):
           assignment_array[i][:len(assignments[v][0])]=assignments[v][0]
           mapping_dict[i]=v
+
+
+     for i in range(cluster_mdl.n_clusters):
+          state_counts_list[i] = np.count_nonzero(np.where(assignment_array==i))
+
+     sorted_cluster_indices = np.argsort(state_counts_list)[:n_runs]
+
+     print sorted_cluster_indices
 
      for ind,val in enumerate(sorted_cluster_indices):
           try:
