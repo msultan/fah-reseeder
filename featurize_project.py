@@ -14,6 +14,10 @@ def featurize_traj(dir,featurizer,traj,stride):
 
 def featurize_project(dir,featurizer_object,stride):
 
+     #if already featurized dont bother(should add a warning about this)
+     if os.path.exists(dir+"/featurized_traj.pkl"):
+          return verboseload(dir+"/featurized_traj.pkl")
+
      if featurizer_object is None:
           featurizer = DihedralFeaturizer(types=['phi', 'psi','chi1'])
      else:
@@ -39,10 +43,12 @@ def featurize_project(dir,featurizer_object,stride):
      return feature_dict
 
 
-def tica_wrapper(dir,feature_dict):
+def tica_wrapper(dir,feature_dict,lag_time=10):
      #100ps*100==10ns and 10 features
+     if os.path.exists(dir+"/tica_features.pkl"):
+          return verboseload(dir+"/tica_features.pkl")
 
-     tica_mdl = tICA(lag_time=100,n_components=10)
+     tica_mdl = tICA(lag_time=lag_time,n_components=10)
      for i in feature_dict.keys():
           try:
                tica_mdl.partial_fit(feature_dict[i])

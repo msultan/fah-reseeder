@@ -20,7 +20,7 @@ def main(args):
 
      #ticafy
      if args.i==True:
-          feature_dict = tica_wrapper(args.d,feature_dict)
+          feature_dict = tica_wrapper(args.d,feature_dict,args.l)
 
      #assignment
      cluster_mdl,assignments = cluster_project_wrapper(args.d,feature_dict,args.n)
@@ -45,6 +45,7 @@ def parse_commandline():
 
      parser.add_argument('-s','--stride',dest='s',default=10,type=int,help='Stride to use when featurizing.')
      parser.add_argument('-i', '--do_tica',dest='i',default=True, help='Whether or not to do tica')
+     parser.add_argument('-l', '--lag_time',dest='l',default=10, help='TICA lag_time')
      parser.add_argument('-n','--n_states',dest='n',default=50,help='Number of States')
 
 
