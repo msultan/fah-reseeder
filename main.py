@@ -45,13 +45,13 @@ def parse_commandline():
 
      parser.add_argument('-s','--stride',dest='s',default=10,type=int,help='Stride to use when featurizing.')
      parser.add_argument('-i', '--do_tica',dest='i',default=True, help='Whether or not to do tica')
-     parser.add_argument('-l', '--lag_time',dest='l',default=10, help='TICA lag_time')
-     parser.add_argument('-n','--n_states',dest='n',default=50,help='Number of States')
+     parser.add_argument('-l', '--lag_time',dest='l',default=10, type=int,help='TICA lag_time')
+     parser.add_argument('-n','--n_states',dest='n',default=50,type=int,help='Number of States')
 
 
-     parser.add_argument('-r','--runs',dest='r',default=2,help='Choose top r states to reseed from')
+     parser.add_argument('-r','--runs',dest='r',default=2,type=int,help='Choose top r states to reseed from')
 
-     parser.add_argument('-c','--clones',dest='c',default=2,help='Start c clones from each state')
+     parser.add_argument('-c','--clones',dest='c',default=2,type=int,help='Start c clones from each state')
 
      args = parser.parse_args()
      return args

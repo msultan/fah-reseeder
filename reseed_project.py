@@ -91,7 +91,7 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
           state_counts_list[i] = np.count_nonzero(assignment_array==i)
 
      print n_runs
-     sorted_cluster_indices = np.argsort(state_counts_list)[:int(n_runs)]
+     sorted_cluster_indices = np.argsort(state_counts_list)[:n_runs]
      print sorted_cluster_indices
      for ind,val in enumerate(sorted_cluster_indices):
           try:
@@ -140,7 +140,7 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
           assert(simulation.system.getNumParticles()==new_state.n_atoms==system.getNumParticles())
 
 
-          for j in range(int(n_clones)):
+          for j in range(n_clones):
                simulation.context.setVelocitiesToTemperature(300)
                simulation.step(1)
                current_state = simulation.context.getState(getPositions=True, getVelocities=True,\
