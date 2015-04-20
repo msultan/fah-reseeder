@@ -88,7 +88,7 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
 
 
      for i in range(cluster_mdl.n_clusters):
-          state_counts_list[i] = np.count_nonzero(np.where(assignment_array==i)[0])
+          state_counts_list[i] = np.count_nonzero(assignment_array==i)
 
      sorted_cluster_indices = np.argsort(state_counts_list)[:n_runs]
 
