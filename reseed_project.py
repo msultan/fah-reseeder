@@ -12,6 +12,10 @@ from simtk.openmm import *
 from simtk import unit
 from simtk.openmm import app
 import simtk.openmm as mm
+from joblib import Parallel, delayed
+import multiprocessing
+
+
 
 def create_simulation_obj(old_state,system,integrator):
      platform = mm.Platform.getPlatformByName('Reference')
@@ -142,7 +146,6 @@ def pull_new_seeds(dir,cluster_mdl,assignments,n_runs,n_clones,stride):
 
           for j in range(n_clones):
                simulation.context.setVelocitiesToTemperature(300)
-               simulation.step(1)
                current_state = simulation.context.getState(getPositions=True, getVelocities=True,\
                     getForces=True,getEnergy=True,getParameters=True,enforcePeriodicBox=True)
                serializeObject(dir,ind,current_state,'state%d.xml'%j)

@@ -10,13 +10,19 @@ from convert_project import *
 from featurize_project import *
 from cluster_project import *
 from reseed_project import *
+from IPython import parallel
 
 
 def main(args):
+     #set up mpi
+     client_list = parallel.Client(profile=args.p)
+     print "Running on:",len(client_list.ids)
+     view = client_list.load_balanced_view()
+
      #extract
-     extract_project_wrapper(args.d)
+     extract_project_wrapper(args.d,view)
      #featurize
-     feature_dict = featurize_project(args.d,args.f,args.s)
+     feature_dict = featurize_project(args.d,args.f,args.s,view)
 
      #ticafy
      if args.i==True:
@@ -39,7 +45,8 @@ def parse_commandline():
      parser.add_argument('-t', '--ref_top', dest='t',default=None,help='Reference PDB Folder.\
           Should map to Runs i.e. folder_name/0.pdb is used for Run0')
 
-
+     parser.add_argument('-p', '--prf', dest='p',default="mpi",help='What ipython cluster\
+      profile to use')
      parser.add_argument('-f', '--featurizer',dest='f',default=None, help='Featurizer to use.Defualts to \
           DihedralFeaturizer')
 

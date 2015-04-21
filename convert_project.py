@@ -10,9 +10,6 @@ import tables
 from mdtraj.utils.contextmanagers import enter_temp_directory
 from mdtraj.utils import six
 from msmbuilder.utils import verbosedump,verboseload
-from joblib import Parallel, delayed
-import multiprocessing
-
 
 
 ##The concatenation code is directly from F@H Munge. Thanks to @kylebeauchamp.
@@ -115,17 +112,20 @@ def sanity_test(dir):
         os.makedirs(os.path.join(dir+"/trajectories/processed_trajectories/"))
     return
 
-def extract_project_wrapper(dir):
+def extract_project_wrapper(dir,view):
 
     sanity_test(dir)
-
-    num_cores = multiprocessing.cpu_count()
 
     runs=len(glob.glob(dir+"/RUN*"))
     clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))
-    print("Using %d cores to parallelize"%num_cores)
+    print("Using %d cores to parallelize"%len(view))
 
-    Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
-        for run in range(runs) for clone in range(clones))
+    jobs = [(dir,run,clone) for run in range(runs) for clone in range(clones)]
+    result = view.map(concatenate_core17,*zip(*jobs))
+
+    result.get()
+    return
+#    Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
+ #       for run in range(runs) for clone in range(clones))
 

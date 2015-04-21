@@ -12,7 +12,7 @@ def featurize_traj(dir,featurizer,traj,stride):
      top = dir+"/topologies/%s.pdb"%os.path.basename(traj).split("_")[0]
      return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
 
-def featurize_project(dir,featurizer_object,stride):
+def featurize_project(dir,featurizer_object,stride,view):
 
      #if already featurized dont bother(should add a warning about this)
      if os.path.exists(dir+"/featurized_traj.pkl"):
@@ -30,12 +30,11 @@ def featurize_project(dir,featurizer_object,stride):
 
      traj_list =  glob.glob(dir+"/trajectories/*.dcd")
 
-     num_cores = multiprocessing.cpu_count()
-     result_list = Parallel(n_jobs=num_cores)(delayed(featurize_traj)(dir,featurizer,traj,stride) \
-        for traj in traj_list)
+     jobs = [(dir,featurizer,traj,stride) for traj in traj_list]
+     results = view.map(featurize_traj,*zip(*jobs))
+     results.get()
 
-
-     for result in result_list:
+     for result in results:
           feature_dict[result[0]] = result[1]
 
      verbosedump(feature_dict,dir+"/featurized_traj.pkl")
