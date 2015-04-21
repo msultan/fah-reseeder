@@ -11,7 +11,7 @@ def featurize_traj(dir,featurizer,traj,stride):
      top = dir+"/topologies/%s.pdb"%os.path.basename(traj).split("_")[0]
      return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
 
-def featurize_project(dir,featurizer_object,stride,prf):
+def featurize_project(dir,featurizer_object,stride,view):
 
      #if already featurized dont bother(should add a warning about this)
      if os.path.exists(dir+"/featurized_traj.pkl"):
@@ -29,12 +29,9 @@ def featurize_project(dir,featurizer_object,stride,prf):
 
      traj_list =  glob.glob(dir+"/trajectories/*.dcd")
 
-     client_list = parallel.Client(profile=prf)
-     print "Running on:",len(client_list.ids)
-     view = client_list.load_balanced_view()
 
      jobs = [(dir,featurizer,traj,stride) for traj in traj_list]
-     results = view.map_async(featurize_traj,*zip(*jobs))
+     results = view.map(featurize_traj,*zip(*jobs))
      results.get()
 
      for result in results:

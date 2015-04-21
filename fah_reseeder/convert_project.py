@@ -112,13 +112,10 @@ def sanity_test(dir):
         os.makedirs(os.path.join(dir+"/trajectories/processed_trajectories/"))
     return
 
-def extract_project_wrapper(dir,prf):
+def extract_project_wrapper(dir,view):
 
     sanity_test(dir)
-    client_list = parallel.Client(profile=prf)
-    print("Running on:",len(client_list.ids))
-    view = client_list.load_balanced_view()
-
+    
     runs=len(glob.glob(dir+"/RUN*"))
     clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))

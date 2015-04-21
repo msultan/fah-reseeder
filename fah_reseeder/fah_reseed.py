@@ -6,18 +6,27 @@ import glob
 import sys
 import os
 
-from convert_project import *
-from featurize_project import *
-from cluster_project import *
-from reseed_project import *
+from fah_reseeder.convert_project import *
+from fah_reseeder.featurize_project import *
+from fah_reseeder.cluster_project import *
+from fah_reseeder.reseed_project import *
 
 
-def fah_reseeder(args):
+def reseed_project():
+     #
+     args = parse_commandline()
+     #make sure we have full path to avoid annoying issues with path
+     args.d = os.path.abspath(args.d)
+
+     client_list = parallel.Client(profile=args.p)
+     client_list[:].execute("from fah_reseeder import *")
+     print("Running on:",len(client_list.ids))
+     view = client_list.direct_view()
 
      #extract
-     extract_project_wrapper(args.d,args.p)
+     extract_project_wrapper(args.d,view)
      #featurize
-     feature_dict = featurize_project(args.d,args.f,args.s,args.p)
+     feature_dict = featurize_project(args.d,args.f,args.s,view)
 
      #ticafy
      if args.i==True:
@@ -61,9 +70,5 @@ def parse_commandline():
 
 
 if __name__ == '__main__':
-
-     args = parse_commandline()
-     #make sure we have full path to avoid annoying issues with path
-     args.d = os.path.abspath(args.d)
-     fah_reseeder(args)
+     reseed_project()
 
