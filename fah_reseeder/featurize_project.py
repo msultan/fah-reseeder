@@ -31,8 +31,7 @@ def featurize_project(dir,featurizer_object,stride,view):
 
 
      jobs = [(dir,featurizer,traj,stride) for traj in traj_list]
-     results = view.map(featurize_traj,*zip(*jobs))
-     results.get()
+     results = view.map_sync(featurize_traj,*zip(*jobs))
 
      for result in results:
           feature_dict[result[0]] = result[1]

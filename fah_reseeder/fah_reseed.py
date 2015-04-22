@@ -10,6 +10,7 @@ from fah_reseeder.convert_project import *
 from fah_reseeder.featurize_project import *
 from fah_reseeder.cluster_project import *
 from fah_reseeder.reseed_project import *
+from IPython import parallel
 
 
 def reseed_project():
@@ -21,8 +22,8 @@ def reseed_project():
      client_list = parallel.Client(profile=args.p)
      client_list[:].execute("from fah_reseeder import *")
      print("Running on:",len(client_list.ids))
-     view = client_list.direct_view()
-
+     view = client_list.load_balanced_view()
+     view.block = True
      #extract
      extract_project_wrapper(args.d,view)
      #featurize

@@ -36,7 +36,7 @@ def keynat(string):
 
 
 
-def concatenate_core17(dir,run,clone):
+def concatenate_core17((dir,run,clone)):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
 
     Parameters
@@ -120,11 +120,9 @@ def extract_project_wrapper(dir,view):
     clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))
     print("Using %d cores to parallelize"%len(view))
-
     jobs = [(dir,run,clone) for run in range(runs) for clone in range(clones)]
-    result = view.map(concatenate_core17,*zip(*jobs))
-    result.get()
-    return
+    result = view.map_sync(concatenate_core17,jobs)
+    return result 
 #    Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
  #       for run in range(runs) for clone in range(clones))
 
