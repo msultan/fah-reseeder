@@ -1,6 +1,5 @@
 from msmbuilder.cluster import MiniBatchKMeans
 from msmbuilder.utils import verbosedump,verboseload
-import numpy as np
 import os
 def cluster_project_wrapper(dir,feature_dict,n_states):
 

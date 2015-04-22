@@ -4,13 +4,9 @@ import os
 import glob
 import sys
 import tarfile
-from mdtraj.formats.dcd import DCDTrajectoryFile
 import mdtraj as md
-import tables
 from mdtraj.utils.contextmanagers import enter_temp_directory
-from mdtraj.utils import six
-from msmbuilder.utils import verbosedump,verboseload
-from IPython import parallel
+
 
 ##The concatenation code is directly from F@H Munge. Thanks to @kylebeauchamp.
 def keynat(string):

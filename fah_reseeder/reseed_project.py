@@ -1,19 +1,14 @@
 
-import numpy as np
 import mdtraj as mdt
 import os
-import shutil
 import numpy as np
 from mdtraj.utils.contextmanagers import enter_temp_directory
 import glob
 import tarfile
-from msmbuilder.utils import verbosedump
 from simtk.openmm import *
-from simtk import unit
 from simtk.openmm import app
 import simtk.openmm as mm
-from joblib import Parallel, delayed
-import multiprocessing
+
 
 
 

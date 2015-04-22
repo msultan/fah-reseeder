@@ -1,11 +1,5 @@
 #!/bin/env/ python
-
-import numpy as np
-import mdtraj as mdt
-import glob
-import sys
 import os
-
 from fah_reseeder.convert_project import *
 from fah_reseeder.featurize_project import *
 from fah_reseeder.cluster_project import *

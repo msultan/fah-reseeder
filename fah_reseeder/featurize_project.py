@@ -3,9 +3,7 @@ from msmbuilder.utils import verboseload,verbosedump
 from msmbuilder.decomposition import tICA
 import glob
 import os
-import numpy as np
 import mdtraj as mdt
-from IPython import parallel
 
 def featurize_traj(dir,featurizer,traj,stride):
      top = dir+"/topologies/%s.pdb"%os.path.basename(traj).split("_")[0]
