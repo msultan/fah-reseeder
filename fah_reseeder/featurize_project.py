@@ -50,6 +50,6 @@ def tica_wrapper(proj_folder,feature_dict,lag_time=10):
 
      tica_features={}
      for i in feature_dict.keys():
-          tica_features[i] = tica_mdl.transform([feature_dict[i]])
+          tica_features[i] = tica_mdl.transform([feature_dict[i]])[0]
      verbosedump(tica_features,proj_folder+"/tica_features.pkl")
      return tica_features
