@@ -49,17 +49,15 @@ def concatenate_core17(job_tuple):
     We use HDF5 because it provides an easy way to store the metadata associated
     with which files have already been processed.
     """
-    dir = job_tuple[0]
-    top_folder = job_tuple[1]
-    run = job_tuple[2]
-    clone = job_tuple[3]
 
-    path = os.path.abspath(dir)+"/RUN%d/CLONE%d/"%(run,clone)
+    proj_folder, top_folder, run, clone = job_tuple
+
+    path = os.path.join(proj_folder,"RUN%d/CLONE%d/"%(run,clone))
     top = md.load(os.path.join(top_folder,"%d.pdb"%run))
-    output_filename =  os.path.abspath(dir)+"/trajectories/%d_%d.dcd"%(run,clone)
+    output_filename =  os.path.join(proj_folder,"trajectories/%d_%d.dcd"%(run,clone))
 
-    already_processed_filename =  os.path.abspath(dir)+"/trajectories/processed_trajectories/%d_%d.txt"\
-                                                                                            %(run,clone)
+    already_processed_filename =  os.path.join(proj_folder,"trajectories/processed_trajectories/%d_%d.txt"\
+                                                                                            %(run,clone))
     print(path,top,output_filename)
     glob_input = os.path.join(path, "results-*.tar.bz2")
     filenames = glob.glob(glob_input)
@@ -95,30 +93,30 @@ def concatenate_core17(job_tuple):
 
 
 
-def sanity_test(dir,top_folder):
+def sanity_test(proj_folder,top_folder):
     if not os.path.isdir(top_folder):
         #print("Toplogies Folder Doesnt exist")
         sys.exit("Toplogies Folder Doesnt exist.Exiting!")
 
 
-    if not os.path.isdir(os.path.join(dir+"/trajectories")):
+    if not os.path.isdir(os.path.join(proj_folder+"/trajectories")):
         print("Trajectories folder doesnt exist.Creating")
-        os.makedirs(os.path.join(dir+"/trajectories"))
+        os.makedirs(os.path.join(proj_folder+"/trajectories"))
 
-    if not os.path.exists(os.path.join(dir+"/trajectories/processed_trajectories/")):
+    if not os.path.exists(os.path.join(proj_folder+"/trajectories/processed_trajectories/")):
         print("Processed trajectories folder doesn't exist.Creating.")
-        os.makedirs(os.path.join(dir+"/trajectories/processed_trajectories/"))
+        os.makedirs(os.path.join(proj_folder+"/trajectories/processed_trajectories/"))
     return
 
-def extract_project_wrapper(dir,top_folder,view):
+def extract_project_wrapper(proj_folder,top_folder,view):
 
-    sanity_test(dir,top_folder)
+    sanity_test(proj_folder,top_folder)
     
-    runs=len(glob.glob(dir+"/RUN*"))
-    clones=len(glob.glob(dir+"/RUN0/CLONE*"))
-    print("Found %d runs and %d clones in %s"%(runs,clones,dir))
+    runs=len(glob.glob(proj_folder+"/RUN*"))
+    clones=len(glob.glob(proj_folder+"/RUN0/CLONE*"))
+    print("Found %d runs and %d clones in %s"%(runs,clones,proj_folder))
     print("Using %d cores to parallelize"%len(view))
-    jobs = [(dir,top_folder,run,clone) for run in range(runs) for clone in range(clones)]
+    jobs = [(proj_folder,top_folder,run,clone) for run in range(runs) for clone in range(clones)]
     result = view.map_sync(concatenate_core17,jobs)
     return result
 

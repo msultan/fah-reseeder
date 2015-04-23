@@ -15,20 +15,20 @@ def create_simulation_obj(old_state, system, integrator):
     return simulation
 
 
-def serializeObject(dir, run_index, obj, objname):
-    file_name = dir + "/new_project/RUN%d/" % (run_index) + objname
+def serializeObject(proj_folder, run_index, obj, objname):
+    file_name = proj_folder + "/new_project/RUN%d/" % (run_index) + objname
     print file
     objfile = open(file_name, 'w')
     objfile.write(XmlSerializer.serialize(obj))
     objfile.close()
 
 
-def load_setup_files(dir, traj_fname):
+def load_setup_files(proj_folder, traj_fname):
     # 0_0.hd5 is run 0 clone 0
     run_index = int(traj_fname.split("_")[0])
 
     print run_index
-    glob_input = dir + "/RUN%d/CLONE0/payload-*.tar.bz2" % run_index
+    glob_input = proj_folder + "/RUN%d/CLONE0/payload-*.tar.bz2" % run_index
     print glob_input
     payload_file = glob.glob(glob_input)[0]
 
@@ -53,13 +53,13 @@ def load_setup_files(dir, traj_fname):
     return state, system, integrator
 
 
-def pull_new_seeds(dir, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride):
+def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride):
     try:
-        os.mkdir(dir + "/new_project")
+        os.mkdir(proj_folder + "/new_project")
     except:
         pass
     try:
-        os.mkdir(dir + "/new_project/topologies")
+        os.mkdir(proj_folder + "/new_project/topologies")
     except:
         pass
 
@@ -86,7 +86,7 @@ def pull_new_seeds(dir, top_folder, cluster_mdl, assignments, n_runs, n_clones, 
     print sorted_cluster_indices
     for ind, val in enumerate(sorted_cluster_indices):
         try:
-            os.mkdir(dir + "/new_project/RUN%d" % ind)
+            os.mkdir(proj_folder + "/new_project/RUN%d" % ind)
         except:
             pass
 
@@ -108,24 +108,24 @@ def pull_new_seeds(dir, top_folder, cluster_mdl, assignments, n_runs, n_clones, 
         top = os.path.join(top_folder+"/%s.pdb" % os.path.basename(traj_fname).split("_")[0])
 
         #since we use stride, multiple frame_ind with stride rate to get actual frame index.
-        new_state = mdt.load_frame(dir + "/trajectories/%s" % traj_fname, top=top, index=frame_ind * stride)
+        new_state = mdt.load_frame(proj_folder + "/trajectories/%s" % traj_fname, top=top, index=frame_ind * stride)
 
         #save it for later reference
-        new_state.save_pdb(dir + "/new_project/topologies/%d.pdb" % ind)
+        new_state.save_pdb(proj_folder + "/new_project/topologies/%d.pdb" % ind)
         #load pdb in openmm format
 
 
-        old_state, system, integrator = load_setup_files(dir, traj_fname)
+        old_state, system, integrator = load_setup_files(proj_folder, traj_fname)
 
         simulation = create_simulation_obj(old_state, system, integrator)
 
         #set new positions
-        pdb = app.PDBFile(dir + "/new_project/topologies/%d.pdb" % ind)
+        pdb = app.PDBFile(proj_folder + "/new_project/topologies/%d.pdb" % ind)
         simulation.context.setPositions(pdb.positions)
 
         #serialize system and integrator once
-        serializeObject(dir, ind, system, 'system.xml')
-        serializeObject(dir, ind, integrator, 'integrator.xml')
+        serializeObject(proj_folder, ind, system, 'system.xml')
+        serializeObject(proj_folder, ind, integrator, 'integrator.xml')
 
         #basic sanity test that the number of atoms are the same. should add more tests
         assert (simulation.system.getNumParticles() == new_state.n_atoms == system.getNumParticles())
@@ -135,7 +135,7 @@ def pull_new_seeds(dir, top_folder, cluster_mdl, assignments, n_runs, n_clones, 
             current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                         getForces=True, getEnergy=True, getParameters=True,
                                                         enforcePeriodicBox=True)
-            serializeObject(dir, ind, current_state, 'state%d.xml' % j)
+            serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
 
 
 

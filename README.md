@@ -1,4 +1,6 @@
 # fah-reseeder
 fast way to reseed 
 #To do basic tests
-python main.py -d test_proj 
+chmod +x test_fah_reseeder.sh
+./test_fah_reseeder.sh
+
