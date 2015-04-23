@@ -12,6 +12,10 @@ def reseed_project():
      args = parse_commandline()
      #make sure we have full path to avoid annoying issues with path
      args.d = os.path.abspath(args.d)
+     if args.t is None:
+         args.t = os.path.join(args.d,"topologies/")
+     else:
+        args.t = os.path.abspath(args.t)
 
      client_list = parallel.Client(profile=args.p)
      client_list[:].execute("from fah_reseeder import *")
@@ -19,9 +23,9 @@ def reseed_project():
      view = client_list.load_balanced_view()
      view.block = True
      #extract
-     extract_project_wrapper(args.d,view)
+     extract_project_wrapper(args.d,args.t,view)
      #featurize
-     feature_dict = featurize_project(args.d,args.f,args.s,view)
+     feature_dict = featurize_project(args.d,args.t,args.f,args.s,view)
 
      #ticafy
      if args.i==True:
@@ -31,7 +35,7 @@ def reseed_project():
      cluster_mdl,assignments = cluster_project_wrapper(args.d,feature_dict,args.n)
 
      #cluster and pull frames
-     pull_new_seeds(args.d,cluster_mdl,assignments,args.r,args.c,args.s)
+     pull_new_seeds(args.d,args.t,cluster_mdl,assignments,args.r,args.c,args.s)
 
      return
 
@@ -44,7 +48,7 @@ def parse_commandline():
      parser.add_argument('-t', '--ref_top', dest='t',default=None,help='Reference PDB Folder.\
           Should map to Runs i.e. folder_name/0.pdb is used for Run0')
 
-     parser.add_argument('-p', '--prf', dest='p',default="mpi",help='What ipython cluster\
+     parser.add_argument('-p', '--prf', dest='p',default="default",help='What ipython cluster\
       profile to use')
      parser.add_argument('-f', '--featurizer',dest='f',default=None, help='Featurizer to use.Defualts to \
           DihedralFeaturizer')

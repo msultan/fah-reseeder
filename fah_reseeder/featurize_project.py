@@ -5,11 +5,16 @@ import glob
 import os
 import mdtraj as mdt
 
-def featurize_traj(dir,featurizer,traj,stride):
-     top = dir+"/topologies/%s.pdb"%os.path.basename(traj).split("_")[0]
-     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
+def featurize_traj(job_tuple):
+    dir =job_tuple[0]
+    top_folder = job_tuple[1]
+    featurizer = job_tuple[2]
+    traj =job_tuple[3]
+    stride = job_tuple[4]
+    top = os.path.join(top_folder+"%s.pdb"%os.path.basename(traj).split("_")[0])
+    return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
 
-def featurize_project(dir,featurizer_object,stride,view):
+def featurize_project(dir,top_folder,featurizer_object,stride,view):
 
      #if already featurized dont bother(should add a warning about this)
      if os.path.exists(dir+"/featurized_traj.pkl"):
@@ -28,8 +33,8 @@ def featurize_project(dir,featurizer_object,stride,view):
      traj_list =  glob.glob(dir+"/trajectories/*.dcd")
 
 
-     jobs = [(dir,featurizer,traj,stride) for traj in traj_list]
-     results = view.map_sync(featurize_traj,*zip(*jobs))
+     jobs = [(dir,top_folder,featurizer,traj,stride) for traj in traj_list]
+     results = view.map_sync(featurize_traj,jobs)
 
      for result in results:
           feature_dict[result[0]] = result[1]

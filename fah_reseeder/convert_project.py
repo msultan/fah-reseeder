@@ -32,7 +32,7 @@ def keynat(string):
 
 
 
-def concatenate_core17((dir,run,clone)):
+def concatenate_core17(job_tuple):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
 
     Parameters
@@ -49,11 +49,13 @@ def concatenate_core17((dir,run,clone)):
     We use HDF5 because it provides an easy way to store the metadata associated
     with which files have already been processed.
     """
-    if dir is None:
-        dir="/nobackup/msultan/research/kinase/her_kinase/fah_data/PROJ9104"
+    dir = job_tuple[0]
+    top_folder = job_tuple[1]
+    run = job_tuple[2]
+    clone = job_tuple[3]
 
     path = os.path.abspath(dir)+"/RUN%d/CLONE%d/"%(run,clone)
-    top = md.load( os.path.abspath(dir)+"/topologies/%d.pdb"%run)
+    top = md.load(os.path.join(top_folder,"%d.pdb"%run))
     output_filename =  os.path.abspath(dir)+"/trajectories/%d_%d.dcd"%(run,clone)
 
     already_processed_filename =  os.path.abspath(dir)+"/trajectories/processed_trajectories/%d_%d.txt"\
@@ -93,8 +95,8 @@ def concatenate_core17((dir,run,clone)):
 
 
 
-def sanity_test(dir):
-    if not os.path.isdir(os.path.join(dir+"/topologies")):
+def sanity_test(dir,top_folder):
+    if not os.path.isdir(top_folder):
         #print("Toplogies Folder Doesnt exist")
         sys.exit("Toplogies Folder Doesnt exist.Exiting!")
 
@@ -108,17 +110,15 @@ def sanity_test(dir):
         os.makedirs(os.path.join(dir+"/trajectories/processed_trajectories/"))
     return
 
-def extract_project_wrapper(dir,view):
+def extract_project_wrapper(dir,top_folder,view):
 
-    sanity_test(dir)
+    sanity_test(dir,top_folder)
     
     runs=len(glob.glob(dir+"/RUN*"))
     clones=len(glob.glob(dir+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,dir))
     print("Using %d cores to parallelize"%len(view))
-    jobs = [(dir,run,clone) for run in range(runs) for clone in range(clones)]
+    jobs = [(dir,top_folder,run,clone) for run in range(runs) for clone in range(clones)]
     result = view.map_sync(concatenate_core17,jobs)
-    return result 
-#    Parallel(n_jobs=num_cores)(delayed(concatenate_core17)(dir,run,clone) \
- #       for run in range(runs) for clone in range(clones))
+    return result
 
