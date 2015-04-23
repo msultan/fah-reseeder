@@ -46,11 +46,7 @@ def tica_wrapper(proj_folder,feature_dict,lag_time=10):
           return verboseload(proj_folder+"/tica_features.pkl")
 
      tica_mdl = tICA(lag_time=lag_time,n_components=10)
-     for i in feature_dict.keys():
-          try:
-               tica_mdl.partial_fit(feature_dict[i])
-          except:
-               pass
+     tica_mdl.fit([feature_dict[i] for i in feature_dict.keys()])
 
      tica_features={}
      for i in feature_dict.keys():
