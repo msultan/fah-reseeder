@@ -32,7 +32,7 @@ def keynat(string):
 
 
 
-def concatenate_core17(dir,run,clone):
+def concatenate_core17((dir,run,clone)):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
 
     Parameters
