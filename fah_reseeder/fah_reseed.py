@@ -40,9 +40,9 @@ def parse_commandline():
      import argparse
      parser = argparse.ArgumentParser()
      parser.add_argument('-d', '--dir', dest='d', default='./',\
-     help='Folder where the project has been rsynced')
-     parser.add_argument('-t', '--ref_top', dest='t',default=None,help='Reference PDB Folder.\
-          Should map to Runs i.e. folder_name/0.pdb is used for Run0')
+     help='Folder where the project has been rsynced', required=True)
+     parser.add_argument('-t', '--ref_top', dest='t',help='Reference PDB Folder.\
+          Should map to Runs i.e. folder_name/0.pdb is used for Run0', required=True)
 
      parser.add_argument('-p', '--prf', dest='p',default="mpi",help='What ipython cluster\
       profile to use')
