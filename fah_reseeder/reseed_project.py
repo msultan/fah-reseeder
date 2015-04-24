@@ -132,6 +132,7 @@ def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_
 
         for j in range(n_clones):
             simulation.context.setVelocitiesToTemperature(300)
+            simulation.step(1)
             current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                         getForces=True, getEnergy=True, getParameters=True,
                                                         enforcePeriodicBox=True)
