@@ -97,14 +97,21 @@ def concatenate_core17(job_tuple):
             except sqlite3.IntegrityError:
                 print("Error in %d %d %s;Recommend reconverting project"%(run,clone,filename))
                 continue
+            try:
+                assert(trj_file.n_frames==trj.n_frames*len(filenames))
+            except:
+                sys.exit("Total trajectory size doesn't match single gen*len(files).\n\
+                Recommend deleting trajectories folder all *.pkl to start over.")
         #otherwise chill here.
         else:
             print("Already Processed %s"%filename)
             continue
     #now save the new dcd file.
+
     trj_file.save_dcd(output_filename)
     cur.close()
     conn.close()
+
     return
 
 
