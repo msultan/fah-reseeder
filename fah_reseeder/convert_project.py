@@ -6,7 +6,7 @@ import sys
 import tarfile
 import mdtraj as md
 from mdtraj.utils.contextmanagers import enter_temp_directory
-
+import sqlite3
 
 ##The concatenation code is directly from F@H Munge. Thanks to @kylebeauchamp.
 def keynat(string):
@@ -30,8 +30,6 @@ def keynat(string):
             r.append(c)
     return r
 
-
-
 def concatenate_core17(job_tuple):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
 
@@ -50,7 +48,14 @@ def concatenate_core17(job_tuple):
     with which files have already been processed.
     """
 
-    proj_folder, top_folder, run, clone = job_tuple
+    proj_folder, top_folder, db_name, run, clone = job_tuple
+
+    conn = sqlite3.connect(db_name)
+    cur = conn.cursor()
+    try:
+        cur.execute("create table dcd_%d_%d (processed STRING UNIQUE)"%(run,clone))
+    except:
+        pass
 
     path = os.path.join(proj_folder,"RUN%d/CLONE%d/"%(run,clone))
     top = md.load(os.path.join(top_folder,"%d.pdb"%run))
@@ -70,11 +75,13 @@ def concatenate_core17(job_tuple):
     if os.path.exists(output_filename):
         trj_file = md.load(output_filename,top=top)
 
-    with open(already_processed_filename, 'a') as infile:
 
-        for filename in filenames:
-            if not os.path.basename(filename) in open(already_processed_filename).read():
-                with enter_temp_directory():
+    for filename in filenames:
+        #check if the file has been processed
+        cmd = "select * from dcd_%d_%d where processed=(\'%s\')"%(run,clone,os.path.basename(filename))
+        # if row doesn't exist in the dcd table.
+        if  cur.execute(cmd).fetchall() == []:
+            with enter_temp_directory():
                     archive = tarfile.open(filename, mode='r:bz2')
                     archive.extract("positions.xtc")
                     trj = md.load("positions.xtc", top=top)
@@ -82,15 +89,23 @@ def concatenate_core17(job_tuple):
                         trj_file =  trj
                     else:
                         trj_file += trj
-                infile.writelines(os.path.basename(filename)+'\n')
-            else:
-                print("Already Processed %s"%filename)
+            #add to processed
+            try:
+                with conn:
+                    cmd = "insert into dcd_%d_%d values (\'%s\')"%(run,clone,os.path.basename(filename))
+                    cur.execute(cmd)
+            except sqlite3.IntegrityError:
+                print("Error in %d %d %s;Recommend reconverting project"%(run,clone,filename))
                 continue
-
+        #otherwise chill here.
+        else:
+            print("Already Processed %s"%filename)
+            continue
+    #now save the new dcd file.
     trj_file.save_dcd(output_filename)
+    cur.close()
+    conn.close()
     return
-
-
 
 
 def sanity_test(proj_folder,top_folder):
@@ -99,24 +114,22 @@ def sanity_test(proj_folder,top_folder):
         sys.exit("Toplogies Folder Doesnt exist.Exiting!")
 
 
-    if not os.path.isdir(os.path.join(proj_folder+"/trajectories")):
+    if not os.path.isdir(os.path.join(proj_folder,"trajectories")):
         print("Trajectories folder doesnt exist.Creating")
-        os.makedirs(os.path.join(proj_folder+"/trajectories"))
+        os.makedirs(os.path.join(proj_folder,"trajectories"))
 
-    if not os.path.exists(os.path.join(proj_folder+"/trajectories/processed_trajectories/")):
-        print("Processed trajectories folder doesn't exist.Creating.")
-        os.makedirs(os.path.join(proj_folder+"/trajectories/processed_trajectories/"))
     return
 
 def extract_project_wrapper(proj_folder,top_folder,view):
 
     sanity_test(proj_folder,top_folder)
-    
+    db_name = os.path.join(proj_folder,"trajectories","processed.db")
+
     runs=len(glob.glob(proj_folder+"/RUN*"))
     clones=len(glob.glob(proj_folder+"/RUN0/CLONE*"))
     print("Found %d runs and %d clones in %s"%(runs,clones,proj_folder))
     print("Using %d cores to parallelize"%len(view))
-    jobs = [(proj_folder,top_folder,run,clone) for run in range(runs) for clone in range(clones)]
+    jobs = [(proj_folder,top_folder,db_name,run,clone) for run in range(runs) for clone in range(clones)]
     result = view.map_sync(concatenate_core17,jobs)
     return result
 
