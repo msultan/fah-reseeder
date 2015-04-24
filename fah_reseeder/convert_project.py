@@ -97,7 +97,7 @@ def concatenate_core17(job_tuple):
                         cmd = "insert into dcd_%d_%d values (\'%s\')"%(run,clone,os.path.basename(filename))
                         cur.execute(cmd)
                         break
-                except sqlite3.IntegrityError:
+                except:
                     pass
 
         #otherwise chill here.
