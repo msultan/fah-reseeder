@@ -109,11 +109,11 @@ def concatenate_core17(job_tuple):
         try:
             assert(trj_file.n_frames==trj.n_frames*len(filenames))
         except:
-            sys.exit("Total trajectory size doesn't match single gen*len(files).\n\
-            Recommend deleting trajectories folder all *.pkl to start over.")
+            sys.exit("Total trajectory size  for dcd_%d_%d doesn't match single gen*len(files).\n\
+            Recommend deleting trajectories folder all *.pkl to start over."%(run,clone))
     #now save the new dcd file.
-
-    trj_file.save_dcd(output_filename)
+    if trj_file is not None:
+        trj_file.save_dcd(output_filename)
     cur.close()
     conn.close()
 
