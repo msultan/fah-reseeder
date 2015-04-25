@@ -1,5 +1,6 @@
 #!/bin/env python
 from __future__ import print_function, division
+import warnings
 import os
 import glob
 import sys
@@ -108,12 +109,13 @@ def concatenate_core17(job_tuple):
     if trj is not None:
         try:
             assert(trj_file.n_frames==trj.n_frames*len(filenames))
+	    #save the results if assertion passes and not issues
+            if trj_file is not None:
+                trj_file.save_dcd(output_filename)
         except:
-            sys.exit("Total trajectory size  for dcd_%d_%d doesn't match single gen*len(files)One is %d and other is %d*%d.\n\
-            Recommend deleting trajectories folder all *.pkl to start over."%(run,clone,trj_file.n_frames,trj.n_frames,len(filenames)))
-    #now save the new dcd file.
-    if trj_file is not None:
-        trj_file.save_dcd(output_filename)
+            #log warning and dont save. 
+            warnings.warn("Total trajectory size  for dcd_%d_%d doesn't match single gen*len(files)One is %d and other is %d*%d.This dcd will NOT be saved."%(run,clone,trj_file.n_frames,trj.n_frames,len(filenames)))
+    #now close the connection
     cur.close()
     conn.close()
 
