@@ -10,7 +10,7 @@ import simtk.openmm as mm
 
 
 def create_simulation_obj(old_state, system, integrator):
-    platform = mm.Platform.getPlatformByName('Reference')
+    platform = mm.Platform.getPlatformByName('CPU')
     simulation = app.Simulation(old_state, system, integrator, platform)
     return simulation
 
@@ -103,7 +103,7 @@ def reseed_single_run(job_tuple):
 
     for j in range(n_clones):
         simulation.context.setVelocitiesToTemperature(300)
-        simulation.step(1)
+        simulation.step(2)
         current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                     getForces=True, getEnergy=True,\
                                                     getParameters=True,\
