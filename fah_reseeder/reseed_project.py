@@ -53,7 +53,64 @@ def load_setup_files(proj_folder, traj_fname):
     return state, system, integrator
 
 
-def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride):
+def reseed_single_run(job_tuple):
+    ind,val,n_clones,proj_folder,top_folder,assignment_array,assignments,mapping_dict,stride = job_tuple
+    try:
+        os.mkdir(proj_folder + "/new_project/RUN%d" % ind)
+    except:
+        pass
+
+        #get where the state exists
+    traj_ind, frame_ind = np.where(assignment_array == val)
+
+    #get a random choice
+    chosen_ind = np.random.choice(range(len(traj_ind)))
+
+    print traj_ind, frame_ind
+    #get trajectory name and frame index
+    traj_fname = mapping_dict[traj_ind[chosen_ind]]
+    frame_ind = frame_ind[chosen_ind]
+
+    print traj_fname, frame_ind
+    #basic sanity test
+    assert (assignments[traj_fname][0][frame_ind] == val)
+
+    top = os.path.join(top_folder+"/%s.pdb" % os.path.basename(traj_fname).split("_")[0])
+
+    #since we use stride, multiple frame_ind with stride rate to get actual frame index.
+    new_state = mdt.load_frame(proj_folder + "/trajectories/%s" % traj_fname, top=top, \
+                               index=frame_ind * stride)
+
+    #save it for later reference
+    new_state.save_pdb(proj_folder + "/new_project/topologies/%d.pdb" % ind)
+    #load pdb in openmm format
+
+
+    old_state, system, integrator = load_setup_files(proj_folder, traj_fname)
+
+
+    #set new positions
+    pdb = app.PDBFile(proj_folder + "/new_project/topologies/%d.pdb" % ind)
+    simulation = create_simulation_obj(pdb.topology, system, integrator)
+    simulation.context.setPositions(pdb.positions)
+
+    #serialize system and integrator once
+    serializeObject(proj_folder, ind, system, 'system.xml')
+    serializeObject(proj_folder, ind, integrator, 'integrator.xml')
+
+    #basic sanity test that the number of atoms are the same. should add more tests
+    assert (simulation.system.getNumParticles() == new_state.n_atoms == system.getNumParticles())
+
+    for j in range(n_clones):
+        simulation.context.setVelocitiesToTemperature(300)
+        simulation.step(1)
+        current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
+                                                    getForces=True, getEnergy=True,\
+                                                    getParameters=True,\
+                                                    enforcePeriodicBox=True)
+        serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
+    return
+def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride,view):
     try:
         os.mkdir(proj_folder + "/new_project")
     except:
@@ -84,59 +141,12 @@ def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_
     print n_runs
     sorted_cluster_indices = np.argsort(state_counts_list)[:n_runs]
     print sorted_cluster_indices
-    for ind, val in enumerate(sorted_cluster_indices):
-        try:
-            os.mkdir(proj_folder + "/new_project/RUN%d" % ind)
-        except:
-            pass
 
-        #get where the state exists
-        traj_ind, frame_ind = np.where(assignment_array == val)
-
-        #get a random choice
-        chosen_ind = np.random.choice(range(len(traj_ind)))
-
-        print traj_ind, frame_ind
-        #get trajectory name and frame index
-        traj_fname = mapping_dict[traj_ind[chosen_ind]]
-        frame_ind = frame_ind[chosen_ind]
-
-        print traj_fname, frame_ind
-        #basic sanity test
-        assert (assignments[traj_fname][0][frame_ind] == val)
-
-        top = os.path.join(top_folder+"/%s.pdb" % os.path.basename(traj_fname).split("_")[0])
-
-        #since we use stride, multiple frame_ind with stride rate to get actual frame index.
-        new_state = mdt.load_frame(proj_folder + "/trajectories/%s" % traj_fname, top=top, index=frame_ind * stride)
-
-        #save it for later reference
-        new_state.save_pdb(proj_folder + "/new_project/topologies/%d.pdb" % ind)
-        #load pdb in openmm format
+    jobs = [(ind,val,n_clones,proj_folder,top_folder,assignment_array,assignments,mapping_dict,stride) \
+            for ind,val in enumerate(sorted_cluster_indices)]
+    result = view.map_sync(reseed_single_run,jobs)
 
 
-        old_state, system, integrator = load_setup_files(proj_folder, traj_fname)
-
-        simulation = create_simulation_obj(old_state, system, integrator)
-
-        #set new positions
-        pdb = app.PDBFile(proj_folder + "/new_project/topologies/%d.pdb" % ind)
-        simulation.context.setPositions(pdb.positions)
-
-        #serialize system and integrator once
-        serializeObject(proj_folder, ind, system, 'system.xml')
-        serializeObject(proj_folder, ind, integrator, 'integrator.xml')
-
-        #basic sanity test that the number of atoms are the same. should add more tests
-        assert (simulation.system.getNumParticles() == new_state.n_atoms == system.getNumParticles())
-
-        for j in range(n_clones):
-            simulation.context.setVelocitiesToTemperature(300)
-            simulation.step(1)
-            current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
-                                                        getForces=True, getEnergy=True, getParameters=True,
-                                                        enforcePeriodicBox=True)
-            serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
-
+    return
 
 

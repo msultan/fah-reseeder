@@ -35,7 +35,7 @@ def reseed_project():
      cluster_mdl,assignments = cluster_project_wrapper(args.d,feature_dict,args.n)
 
      #cluster and pull frames
-     pull_new_seeds(args.d,args.t,cluster_mdl,assignments,args.r,args.c,args.s)
+     pull_new_seeds(args.d,args.t,cluster_mdl,assignments,args.r,args.c,args.s,view)
 
      return
 
