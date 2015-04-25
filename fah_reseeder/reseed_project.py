@@ -103,7 +103,6 @@ def reseed_single_run(job_tuple):
 
     for j in range(n_clones):
         simulation.context.setVelocitiesToTemperature(300)
-	simulation.step(1)
 	current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                     getForces=True, getEnergy=True,\
                                                     getParameters=True,\
