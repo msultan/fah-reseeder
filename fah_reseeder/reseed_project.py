@@ -9,10 +9,6 @@ from simtk.openmm import app
 import simtk.openmm as mm
 
 
-def create_simulation_obj(old_state, system, integrator):
-    platform = mm.Platform.getPlatformByName('CPU')
-    simulation = app.Simulation(old_state, system, integrator, platform)
-    return simulation
 
 
 def serializeObject(proj_folder, run_index, obj, objname):
@@ -91,23 +87,28 @@ def reseed_single_run(job_tuple):
 
     #set new positions
     pdb = app.PDBFile(proj_folder + "/new_project/topologies/%d.pdb" % ind)
-    simulation = create_simulation_obj(pdb.topology, system, integrator)
+    
+    platform = mm.Platform.getPlatformByName('CPU')
+    simulation = app.Simulation(old_state, system, integrator, platform)
+    #not sure why we need this but its imporant to explicitly set teh state
+    simulation.context.setState(old_state)
     simulation.context.setPositions(pdb.positions)
-
     #serialize system and integrator once
     serializeObject(proj_folder, ind, system, 'system.xml')
     serializeObject(proj_folder, ind, integrator, 'integrator.xml')
 
     #basic sanity test that the number of atoms are the same. should add more tests
     assert (simulation.system.getNumParticles() == new_state.n_atoms == system.getNumParticles())
-
     for j in range(n_clones):
         simulation.context.setVelocitiesToTemperature(300)
 	current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                     getForces=True, getEnergy=True,\
                                                     getParameters=True,\
                                                     enforcePeriodicBox=True)
-        serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
+        #since the position is always the same, the potentail energy should be roughly equal
+	#assert(abs(current_state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole) - old_state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)) <= 10)
+
+	serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
     return
 def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride,view):
     try:
