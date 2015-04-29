@@ -7,7 +7,7 @@ import mdtraj as mdt
 
 def featurize_traj(job_tuple):
     proj_folder,top_folder,featurizer,traj,stride = job_tuple
-    top = os.path.join(top_folder+"%s.pdb"%os.path.basename(traj).split("_")[0])
+    top = os.path.join(top_folder, "%s.pdb"%os.path.basename(traj).split("_")[0])
     return [os.path.basename(traj),featurizer.partial_transform(mdt.load(traj,top=top,stride=stride))]
 
 def featurize_project(proj_folder,top_folder,featurizer_object,stride,view):
