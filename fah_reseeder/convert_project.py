@@ -86,8 +86,11 @@ def concatenate_core17(job_tuple):
             with enter_temp_directory():
                     archive = tarfile.open(filename, mode='r:bz2')
                     archive.extract("positions.xtc")
-                    trj = md.load("positions.xtc", top=top)
-                    if trj_file is None:
+                    try:
+			trj = md.load("positions.xtc", top=top)
+                    except:
+			raise RuntimeWarning("%s_%s is broken.Skipping"%(run,clone))
+		    if trj_file is None:
                         trj_file =  trj
                     else:
                         trj_file += trj
