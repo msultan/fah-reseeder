@@ -5,6 +5,7 @@ import os
 import glob
 import sys
 import tarfile
+from mdtraj.formats.hdf5 import HDF5TrajectoryFile
 import mdtraj as md
 from mdtraj.utils.contextmanagers import enter_temp_directory
 import sqlite3
