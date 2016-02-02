@@ -5,6 +5,7 @@ import os
 import glob
 import sys
 import tarfile
+import warnings 
 from mdtraj.formats.hdf5 import HDF5TrajectoryFile
 from mdtraj.utils import six
 import mdtraj as md
@@ -78,13 +79,17 @@ def hdf5_concatenate_core17(job_tuple):
         with enter_temp_directory():
             print("Processing %s" % filename)
             archive = tarfile.open(filename, mode='r:bz2')
-            archive.extract("positions.xtc")
-            trj = md.load("positions.xtc", top=top)
-
-            for frame in trj:
-                trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
-
-            trj_file._handle.root.processed_filenames.append([filename])
+            try:
+		archive.extract("positions.xtc")
+		trj = md.load("positions.xtc", top=top)
+		for frame in trj:
+			trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
+			trj_file._handle.root.processed_filenames.append([filename])
+	    except:
+		#something wrong with the current trajectory file. Warn and return immediately 
+		warnings.warn("Problem at %s.Stopping trajectory here"%filename)
+		return
+    return 
 
 def dcd_concatenate_core17(job_tuple):
     """Concatenate tar bzipped XTC files created by Folding@Home Core17.
