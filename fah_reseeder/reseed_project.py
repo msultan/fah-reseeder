@@ -13,7 +13,7 @@ import simtk.openmm as mm
 
 def serializeObject(proj_folder, run_index, obj, objname):
     file_name = proj_folder + "/new_project/RUN%d/" % (run_index) + objname
-    print file
+    print(file_name)
     objfile = open(file_name, 'w')
     objfile.write(XmlSerializer.serialize(obj))
     objfile.close()
@@ -23,16 +23,16 @@ def load_setup_files(proj_folder, traj_fname):
     # 0_0.hd5 is run 0 clone 0
     run_index = int(traj_fname.split("_")[0])
 
-    print run_index
+    print(run_index)
     glob_input = proj_folder + "/RUN%d/CLONE0/payload-*.tar.bz2" % run_index
-    print glob_input
+    print(glob_input)
     payload_file = glob.glob(glob_input)[0]
 
-    print payload_file
+    print(payload_file)
     if not payload_file:
-        raise "Error:Payload files not found"
+        raise("Error:Payload files not found")
 
-    print os.path.abspath(payload_file)
+    print(os.path.abspath(payload_file))
     with enter_temp_directory():
         archive = tarfile.open(payload_file, mode='r:bz2')
         archive.extract("system.xml")
@@ -62,12 +62,12 @@ def reseed_single_run(job_tuple):
     #get a random choice
     chosen_ind = np.random.choice(range(len(traj_ind)))
 
-    print traj_ind, frame_ind
+    print(traj_ind, frame_ind)
     #get trajectory name and frame index
     traj_fname = mapping_dict[traj_ind[chosen_ind]]
     frame_ind = frame_ind[chosen_ind]
 
-    print traj_fname, frame_ind
+    print(traj_fname, frame_ind)
     #basic sanity test
     assert (assignments[traj_fname][0][frame_ind] == val)
 
@@ -101,15 +101,16 @@ def reseed_single_run(job_tuple):
     assert (simulation.system.getNumParticles() == new_state.n_atoms == system.getNumParticles())
     for j in range(n_clones):
         simulation.context.setVelocitiesToTemperature(300)
-	current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
+        current_state = simulation.context.getState(getPositions=True, getVelocities=True, \
                                                     getForces=True, getEnergy=True,\
                                                     getParameters=True,\
                                                     enforcePeriodicBox=True)
+        serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
         #since the position is always the same, the potentail energy should be roughly equal
 	#assert(abs(current_state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole) - old_state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)) <= 10)
 
-	serializeObject(proj_folder, ind, current_state, 'state%d.xml' % j)
     return
+
 def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_clones, stride,view):
     try:
         os.mkdir(proj_folder + "/new_project")
@@ -138,9 +139,9 @@ def pull_new_seeds(proj_folder, top_folder, cluster_mdl, assignments, n_runs, n_
     for i in range(cluster_mdl.n_clusters):
         state_counts_list[i] = np.count_nonzero(assignment_array == i)
 
-    print n_runs
+    print(n_runs)
     sorted_cluster_indices = np.argsort(state_counts_list)[:n_runs]
-    print sorted_cluster_indices
+    print(sorted_cluster_indices)
 
     jobs = [(ind,val,n_clones,proj_folder,top_folder,assignment_array,assignments,mapping_dict,stride) \
             for ind,val in enumerate(sorted_cluster_indices)]
