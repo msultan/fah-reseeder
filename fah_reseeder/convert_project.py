@@ -80,15 +80,15 @@ def hdf5_concatenate_core17(job_tuple):
             print("Processing %s" % filename)
             archive = tarfile.open(filename, mode='r:bz2')
             try:
-		archive.extract("positions.xtc")
-		trj = md.load("positions.xtc", top=top)
-		for frame in trj:
-			trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
-			trj_file._handle.root.processed_filenames.append([filename])
-	    except:
-		#something wrong with the current trajectory file. Warn and return immediately 
-		warnings.warn("Problem at %s.Stopping trajectory here"%filename)
-		return
+                archive.extract("positions.xtc")
+                trj = md.load("positions.xtc", top=top)
+                for frame in trj:
+                    trj_file.write(coordinates=frame.xyz, cell_lengths=frame.unitcell_lengths, cell_angles=frame.unitcell_angles)
+                    trj_file._handle.root.processed_filenames.append([filename])
+            except:
+                #something wrong with the current trajectory file. Warn and return immediately
+                warnings.warn("Problem at %s.Stopping trajectory here"%filename)
+                return
     return 
 
 
